@@ -92,7 +92,7 @@ return {
 
       require("luasnip-latex-snippets").setup {
         use_treesitter = false,
-        allow_on_markdown = false,
+        allow_on_markdown = true,
       }
 
       vim.api.nvim_create_autocmd("FileType", {
@@ -100,7 +100,7 @@ return {
         callback = function()
           local ok_cmp, cmp = pcall(require, "cmp")
           if ok_cmp then
-            cmp.setup.buffer { enabled = false }
+            cmp.setup.buffer { enabled = true }
           end
 
           vim.opt.spell = true
@@ -114,9 +114,59 @@ return {
   {
     "lervag/vimtex",
     ft = { "tex", "plaintex", "latex" },
-    init = function()
-      vim.g.vimtex_view_method = "skim"
+    config = function()
+      require "configs.latex" -- 👈 Load your conceal config
+      vim.g.vimtex_view_method = "zathura"
       vim.g.vimtex_compiler_method = "latexmk"
+    end,
+  },
+  {
+    "iamcco/markdown-preview.nvim",
+    ft = { "markdown" },
+    build = "cd app && npm install",
+    config = function()
+      require "configs.markdown"
+      vim.g.mkdp_browser = "firefox" -- or brave, chromium, etc.
+      vim.g.mkdp_markdown_css = "" -- you can style it later if needed
+      vim.g.mkdp_theme = "dark"
+      vim.g.mkdp_filetypes = { "markdown" }
+      vim.g.mkdp_preview_options = {
+        mkit = {
+          mathJax = true,
+          katex = true,
+        },
+        theme = "dark",
+      }
+    end,
+  },
+  {
+    "epwalsh/obsidian.nvim",
+    version = "*",
+    lazy = false,
+    dependencies = {
+      "nvim-lua/plenary.nvim",
+    },
+    opts = {
+      dir = "~/documents/library", -- 💾 your vault path
+      daily_notes = {
+        folder = "daily",
+        date_format = "%Y-%m-%d",
+      },
+      completion = {
+        nvim_cmp = true,
+        min_chars = 2,
+      },
+      mappings = {
+        ["gf"] = {
+          action = function()
+            return require("obsidian").util.gf_passthrough()
+          end,
+          opts = { noremap = false, expr = true },
+        },
+      },
+    },
+    init = function()
+      require "configs.markdown"
     end,
   },
 }
